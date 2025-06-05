@@ -1,0 +1,200 @@
+{% extends 'dashboard/zone_base.html' %}
+
+{% block content %}
+<div class="p-6 dark:bg-gray-900 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header with Enhanced Profile -->
+        <div class="mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                    <h1 class="text-3xl font-bold dark:text-gray-100 text-gray-900">Zone Overview</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2">Manage your zone and monitor cell activities</p>
+                </div>
+            </div>
+
+            <!-- Enhanced Zone Leader Profile Card -->
+            <div class="mt-6 dark:bg-gray-800 bg-white rounded-xl shadow-lg border dark:border-gray-700 border-gray-200">
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                        <!-- Profile Picture Section -->
+                        <div class="flex-shrink-0">
+                            {% if user.userprofile.profile_pic %}
+                                <img src="{{ user.userprofile.profile_pic.url }}" alt="{{ user.username }}" 
+                                     class="w-24 h-24 rounded-full object-cover border-4 border-blue-500 dark:border-blue-400">
+                            {% else %}
+                                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 
+                                            flex items-center justify-center text-white text-3xl font-bold">
+                                    {{ user.username|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Profile Info Section -->
+                        <div class="flex-grow">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <div class="flex items-center space-x-3">
+                                        <h2 class="text-2xl font-bold dark:text-white text-gray-900">
+                                            {{ user.get_full_name|default:user.username }}
+                                        </h2>
+                                        <span class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800 
+                                                   dark:bg-blue-900/30 dark:text-blue-400 font-medium">
+                                            Zone Leader
+                                            {% if user.userprofile.center %}
+                                            &middot; {{ user.userprofile.center.name }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <p class="text-gray-600 dark:text-gray-400 mt-1">{{ user.email }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Zone Stats -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 
+                                                flex items-center justify-center">
+                                        <i class="fas fa-map-marker-alt text-blue-600 dark:text-blue-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Zone</p>
+                                        <p class="font-semibold dark:text-white text-gray-900">
+                                            {{ user.userprofile.zone.name }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 
+                                                flex items-center justify-center">
+                                        <i class="fas fa-users text-purple-600 dark:text-purple-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Cell Leaders</p>
+                                        <p class="font-semibold dark:text-white text-gray-900">
+                                            {{ total_cell_leaders }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 
+                                                flex items-center justify-center">
+                                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Resolution Rate</p>
+                                        <p class="font-semibold dark:text-white text-gray-900">
+                                            {{ approved_percentage }}%
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 
+                                                flex items-center justify-center">
+                                        <i class="fas fa-tasks text-indigo-600 dark:text-indigo-400"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Total Issues</p>
+                                        <p class="font-semibold dark:text-white text-gray-900">
+                                            {{ total_issues }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-600 dark:text-blue-400">Cells</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ total_cells }}</p>
+                        <p class="text-sm dark:text-gray-400 text-gray-600 mt-1">Active cells</p>
+                    </div>
+                    <div class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
+                        <i class="fas fa-th text-2xl text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-purple-600 dark:text-purple-400">Cell Leaders</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ total_cell_leaders }}</p>
+                        <p class="text-sm dark:text-gray-400 text-gray-600 mt-1">Active leaders</p>
+                    </div>
+                    <div class="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-full">
+                        <i class="fas fa-users text-2xl text-purple-600 dark:text-purple-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400">Issues</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ total_issues }}</p>
+                        <p class="text-sm dark:text-gray-400 text-gray-600 mt-1">Total issues</p>
+                    </div>
+                    <div class="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-full">
+                        <i class="fas fa-exclamation-circle text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-yellow-600 dark:text-yellow-400">Pending</h4>
+                    <div class="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-full">
+                        <i class="fas fa-clock text-2xl text-yellow-600 dark:text-yellow-400"></i>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold dark:text-gray-100 text-gray-900">{{ pending_issues }}</p>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-4">
+                    <div class="bg-yellow-500 h-2.5 rounded-full" style="width: {{ pending_percentage }}%"></div>
+                </div>
+                <p class="text-sm dark:text-gray-400 text-gray-600 mt-2">{{ pending_percentage }}% of total issues</p>
+            </div>
+
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-green-600 dark:text-green-400">Approved</h4>
+                    <div class="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
+                        <i class="fas fa-check text-2xl text-green-600 dark:text-green-400"></i>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold dark:text-gray-100 text-gray-900">{{ approved_issues }}</p>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-4">
+                    <div class="bg-green-500 h-2.5 rounded-full" style="width: {{ approved_percentage }}%"></div>
+                </div>
+                <p class="text-sm dark:text-gray-400 text-gray-600 mt-2">{{ approved_percentage }}% of total issues</p>
+            </div>
+
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-red-600 dark:text-red-400">Rejected</h4>
+                    <div class="bg-red-100 dark:bg-red-900/30 p-3 rounded-full">
+                        <i class="fas fa-times text-2xl text-red-600 dark:text-red-400"></i>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold dark:text-gray-100 text-gray-900">{{ rejected_issues }}</p>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-4">
+                    <div class="bg-red-500 h-2.5 rounded-full" style="width: {{ rejected_percentage }}%"></div>
+                </div>
+                <p class="text-sm dark:text-gray-400 text-gray-600 mt-2">{{ rejected_percentage }}% of total issues</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

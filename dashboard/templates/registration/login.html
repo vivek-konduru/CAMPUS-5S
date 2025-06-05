@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - 3S Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        .animate-slide-up {
+            animation: slideUp 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-200 via-blue-100 to-sky-200 min-h-screen flex items-center justify-center">
+    <!-- Logo at top -->
+    <div class="absolute top-4 left-4">
+        <img src="https://tuningfork-live.s3.amazonaws.com/nttf2/files/logos/logo.png" 
+             alt="NTTF Logo" 
+             class="w-[152px] h-[64px] shadow-lg rounded animate-fade-in"
+             style="box-shadow: 0 5px 10px #333333;">
+    </div>
+
+    <div class="max-w-md w-full mx-4 animate-slide-up">
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-bold text-gray-800 mb-2">Welcome Back</h2>
+            <p class="text-gray-600 text-lg">Please sign in to continue</p>
+        </div>
+
+        <div class="bg-white rounded-xl p-8 shadow-xl border border-gray-200">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                {% if form.errors %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 animate-fade-in">
+                    <i class="fas fa-exclamation-circle mr-2"></i>Invalid username or password.
+                </div>
+                {% endif %}
+                
+                <div class="space-y-6">
+                    <div class="transform transition duration-200 hover:scale-102">
+                        <label for="username" class="block text-sm font-medium text-gray-600 mb-2">Username</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-500">
+                                <i class="far fa-user"></i>
+                            </span>
+                            <input type="text" name="username" id="username" required 
+                                   class="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-3 text-gray-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition duration-200">
+                        </div>
+                    </div>
+
+                    <div class="transform transition duration-200 hover:scale-102">
+                        <label for="password" class="block text-sm font-medium text-gray-600 mb-2">Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-500">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" name="password" id="password" required 
+                                   class="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-12 py-3 text-gray-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition duration-200">
+                            <button type="button" 
+                                    onclick="togglePassword()"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 cursor-pointer hover:text-blue-500">
+                                <i id="passwordEye" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition duration-200 transform hover:scale-102 hover:shadow-lg font-medium text-lg">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                    </button>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{% url 'password_reset' %}" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                        Forgot your password?
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="text-center mt-6">
+            <a href="{% url 'landing' %}" class="text-gray-600 hover:text-blue-600 transition duration-200 text-lg">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Home
+            </a>
+        </div>
+    </div>
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const passwordEye = document.getElementById('passwordEye');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordEye.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                passwordEye.className = 'fas fa-eye';
+            }
+        }
+    </script>
+</body>
+</html>

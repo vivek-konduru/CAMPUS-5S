@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Asset Administration{% endblock %}
+
+{% block content %}
+<div class="p-6 dark:bg-gray-900 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold dark:text-gray-100 text-gray-900 mb-8">Assets Overview</h1>
+
+        <!-- Assets Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {% for zone in zones %}
+            <div onclick="window.location.href='{% url 'admin_asset_details' zone.id %}'" 
+                 class="dark:bg-gray-800 bg-white rounded-xl shadow-lg p-6 border dark:border-gray-700 border-gray-200 hover:shadow-xl transition-shadow cursor-pointer">
+                <!-- Zone Header -->
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-xl font-semibold dark:text-gray-100 text-gray-900">{{ zone.name }}</h3>
+                        <p class="text-sm dark:text-gray-400 text-gray-600">Zone Assets</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                            {{ zone.total_assets }} Assets
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Asset Types -->
+                <div class="mb-4 space-y-3">
+                    <h4 class="text-sm font-semibold dark:text-gray-300 text-gray-700">Asset Distribution</h4>
+                    {% for asset_type in zone.asset_types %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-boxes text-blue-600 dark:text-blue-400 mr-3"></i>
+                            <span class="text-sm dark:text-gray-300 text-gray-700">{{ asset_type.type }}</span>
+                        </div>
+                        <span class="text-sm font-medium dark:text-gray-400 text-gray-600">{{ asset_type.count }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm dark:text-gray-400 text-gray-500">No assets in this zone</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Recent Assets -->
+                <div class="mb-4">
+                    <h4 class="text-sm font-semibold dark:text-gray-300 text-gray-700 mb-2">Recent Assets</h4>
+                    <div class="space-y-2">
+                        {% for asset in zone.recent_assets %}
+                        <div class="flex items-center text-sm">
+                            <span class="w-2 h-2 rounded-full mr-2 bg-blue-400"></span>
+                            <span class="dark:text-gray-300 text-gray-700">{{ asset.get_asset_type_display }} - {{ asset.asset_id }}</span>
+                            <span class="ml-auto text-xs dark:text-gray-400 text-gray-500">
+                                Added {{ asset.added_date|timesince }} ago
+                            </span>
+                        </div>
+                        {% empty %}
+                        <p class="text-sm dark:text-gray-400 text-gray-500">No recent assets</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Asset Stats -->
+                <div class="pt-4 border-t dark:border-gray-700 border-gray-200">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm font-medium dark:text-gray-300 text-gray-700">Total Cells</p>
+                            <div class="mt-2">
+                                <span class="text-2xl font-bold dark:text-gray-100 text-gray-900">{{ zone.total_cells }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium dark:text-gray-300 text-gray-700">Issues Reported</p>
+                            <div class="mt-2">
+                                <span class="text-2xl font-bold dark:text-gray-100 text-gray-900">{{ zone.total_issues }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-2 text-center py-8">
+                <p class="text-gray-500 dark:text-gray-400">No zones found</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

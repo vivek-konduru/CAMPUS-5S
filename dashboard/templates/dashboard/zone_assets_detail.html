@@ -1,0 +1,70 @@
+{% extends 'dashboard/zone_base.html' %}
+
+{% block content %}
+<div class="p-6 dark:bg-gray-900 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Back button -->
+        <a href="{% url 'zone_assets' %}" class="inline-flex items-center mb-4 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Back to Overview
+        </a>
+
+        <!-- Cell Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold dark:text-gray-100 text-gray-900">{{ cell.name }} - Assets</h1>
+            <p class="text-sm dark:text-gray-400 text-gray-600">{{ cell.description|default:"No description" }}</p>
+        </div>
+
+        <!-- Asset Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="dark:bg-gray-800 bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold dark:text-gray-100 text-gray-900 mb-2">Total Assets</h3>
+                <p class="text-3xl font-bold dark:text-gray-100 text-gray-900">{{ total_assets }}</p>
+            </div>
+            {% for asset_type in assets_by_type %}
+            <div class="dark:bg-gray-800 bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold dark:text-gray-100 text-gray-900 mb-2">
+                    {{ asset_type.asset_type|title }}s
+                </h3>
+                <p class="text-3xl font-bold dark:text-gray-100 text-gray-900">{{ asset_type.count }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Assets List -->
+        <div class="dark:bg-gray-800 bg-white rounded-xl shadow-lg">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold dark:text-gray-100 text-gray-900 mb-4">Asset List</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y dark:divide-gray-700 divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 text-gray-500 uppercase tracking-wider">Asset ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 text-gray-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 text-gray-500 uppercase tracking-wider">Added Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-300 text-gray-500 uppercase tracking-wider">Added By</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y dark:divide-gray-700 divide-gray-200">
+                            {% for asset in assets %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300 text-gray-900">{{ asset.asset_id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300 text-gray-900">{{ asset.get_asset_type_display }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300 text-gray-900">{{ asset.added_date|date:"M d, Y" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm dark:text-gray-300 text-gray-900">{{ asset.added_by.username }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-sm dark:text-gray-400 text-gray-500">No assets found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

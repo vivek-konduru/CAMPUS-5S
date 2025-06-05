@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5S Management System - {% block title %}{% endblock title %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="dark:bg-gray-900 bg-white">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div id="sidebar" class="fixed md:relative w-64 dark:bg-gray-800 bg-gray-100 shadow-xl border-r dark:border-gray-700 border-gray-200 transform -translate-x-full md:translate-x-0 transition-transform duration-300 h-full z-30">
+            <div class="p-4 border-b dark:border-gray-700 border-gray-200">
+                <h1 class="text-xl font-bold flex items-center text-blue-600 dark:text-blue-400">
+                    <i class="fas fa-layer-group mr-2 text-blue-600 dark:text-blue-500"></i>
+                    5S Management
+                </h1>
+            </div>
+            <nav class="p-4">
+                <p class="text-xs font-semibold dark:text-gray-400 text-gray-600 uppercase tracking-wider mb-4">Main Navigation</p>
+                <a href="{% url 'home' %}" class="flex items-center py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-all duration-200 {% if request.path == '/' %}bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400{% endif %}">
+                    <i class="fas fa-home w-5 mr-3 text-lg"></i>
+                    <span>Home</span>
+                </a>
+                <!-- Update other navigation items with similar pattern -->
+                <a href="{% url 'users' %}" class="flex items-center py-3 px-4 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg transition-all duration-200 {% if request.path == '/users/' %}bg-gray-100 dark:bg-gray-700 text-purple-600 dark:text-purple-400{% endif %}">
+                    <i class="fas fa-users w-5 mr-3 text-lg"></i>
+                    <span>Users</span>
+                </a>
+                <a href="{% url 'zones' %}" class="flex items-center py-3 px-4 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-purple-600 dark:hover:text-purple-400 rounded-lg transition-all duration-200 {% if request.path == '/zones/' %}bg-gray-100 dark:bg-gray-700 text-purple-600 dark:text-purple-400{% endif %}">
+                    <i class="fas fa-map-marker-alt w-5 mr-3 text-lg"></i>
+                    <span>Zones</span>
+                </a>
+                <!-- Update the cells link -->
+                <a href="{% url 'cells' %}" class="flex items-center py-3 px-4 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg transition-all duration-200 {% if request.resolver_match.url_name == 'cells' %}bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400{% endif %}">
+                    <i class="fas fa-th w-5 mr-3 text-lg"></i>
+                    <span>Cells</span>
+                </a>
+                <a href="{% url 'issues' %}" class="flex items-center py-3 px-4 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-yellow-600 dark:hover:text-yellow-400 rounded-lg transition-all duration-200 {% if request.path == '/issues/' %}bg-gray-100 dark:bg-gray-700 text-yellow-600 dark:text-yellow-400{% endif %}">
+                    <i class="fas fa-exclamation-circle w-5 mr-3 text-lg"></i>
+                    <span>Issues</span>
+                </a>
+
+                <!-- Asset Management Section -->
+                <a href="{% url 'asset_admin' %}" class="flex items-center py-3 px-4 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-green-600 dark:hover:text-green-400 rounded-lg transition-all duration-200 {% if request.path == '/asset-admin/' %}bg-gray-100 dark:bg-gray-700 text-green-600 dark:text-green-400{% endif %}">
+                    <i class="fas fa-boxes w-5 mr-3 text-lg"></i>
+                    <span>Assets</span>
+                </a>
+
+                <!-- Red Tag Section -->
+                <a href="{% url 'admin_red_tags' %}" class="flex items-center py-3 px-4 dark:text-gray-300 text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-all duration-200 {% if request.path == '/red-tag-admin/' %}bg-gray-100 dark:bg-gray-700 text-red-600 dark:text-red-400{% endif %}">
+                    <i class="fas fa-tag w-5 mr-3 text-lg"></i>
+                    <span>Red Tag Storage</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Top Navigation -->
+            <div class="dark:bg-gray-800 bg-gray-100 shadow-lg border-b dark:border-gray-700 border-gray-200">
+                <div class="flex justify-between items-center p-4">
+                    <!-- Sidebar Toggle Button -->
+                    <button id="sidebarToggle" class="text-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none rounded-lg text-sm p-2.5">
+                        <i class="fas fa-bars w-5 h-5"></i>
+                    </button>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Theme Toggle Button -->
+                        <button id="theme-toggle" class="text-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none rounded-lg text-sm p-2.5">
+                            <i id="theme-toggle-dark-icon" class="fas fa-moon hidden w-5 h-5"></i>
+                            <i id="theme-toggle-light-icon" class="fas fa-sun hidden w-5 h-5"></i>
+                        </button>
+                        
+                        {% if user.is_authenticated %}
+                            <!-- Profile Picture -->
+                            <a href="{% url 'settings' %}" class="w-8 h-8 rounded-full overflow-hidden">
+                                {% if user.userprofile.profile_pic %}
+                                    <img src="{{ user.userprofile.profile_pic.url }}" alt="{{ user.username }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full dark:bg-gray-600 bg-blue-100 flex items-center justify-center dark:text-white text-blue-600 font-semibold">
+                                        {{ request.user.username|first|upper }}
+                                    </div>
+                                {% endif %}
+                            </a>
+                            
+                           <!-- Logout Button -->
+                            <button onclick="confirmLogout()" class="group flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md transition-all duration-300 hover:shadow-lg hover:scale-105 hover:-translate-y-0.5">
+                                <span class="text-sm">Logout</span>
+                                <i class="fas fa-sign-out-alt group-hover:animate-spin transition-transform duration-300"></i>
+                            </button>
+                            
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+
+<!-- Logout Modal -->
+<div id="logoutModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Logout Confirmation</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Are you sure you want to logout?</p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button id="confirmLogoutBtn" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                    Yes
+                </button>
+                <button id="cancelLogoutBtn" class="ml-2 px-4 py-2 bg-gray-100 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <!-- Page Content -->
+            <div class="flex-1 overflow-auto">
+                {% block content %}{% endblock content %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Toggle Script -->
+    <script>
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        // Change the icons inside the button based on previous settings
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            themeToggleLightIcon.classList.remove('hidden');
+            document.documentElement.classList.add('dark');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+            document.documentElement.classList.remove('dark');
+        }
+
+        themeToggleBtn.addEventListener('click', function() {
+            // Toggle icons
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+
+            // If is set in localStorage
+            if (localStorage.getItem('color-theme')) {
+                if (localStorage.getItem('color-theme') === 'light') {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+            } else {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                }
+            }
+        });
+
+        // Sidebar Toggle functionality
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-20 hidden';
+        document.body.appendChild(overlay);
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Handle responsive behavior
+        function handleResize() {
+            if (window.innerWidth >= 768) { // md breakpoint
+                overlay.classList.add('hidden');
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Initial check
+
+            // Add this to your existing script section
+            function confirmLogout() {
+                document.getElementById('logoutModal').classList.remove('hidden');
+            }
+    
+            document.getElementById('confirmLogoutBtn').addEventListener('click', function() {
+                window.location.href = "{% url 'logout' %}";
+            });
+    
+            document.getElementById('cancelLogoutBtn').addEventListener('click', function() {
+                document.getElementById('logoutModal').classList.add('hidden');
+            });
+    
+            // Close modal when clicking outside
+            document.getElementById('logoutModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+        </script>
+</body>
+</html>

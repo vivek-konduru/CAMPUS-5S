@@ -1,0 +1,30 @@
+{% extends 'dashboard/zone_base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">{{ zone.name }}</h1>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Zone Details</h2>
+        <p class="text-gray-600 dark:text-gray-400">{{ zone.description }}</p>
+        
+        <div class="mt-4">
+            <p><strong>Total Cells:</strong> {{ cells.count }}</p>
+            <p><strong>Cell Leaders:</strong> {{ cell_leaders_count }}</p>
+            <p><strong>Total Members:</strong> {{ total_members }}</p>
+        </div>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Cells in this Zone</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for cell in cells %}
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                <h3 class="font-semibold">{{ cell.name }}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ cell.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

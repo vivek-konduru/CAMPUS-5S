@@ -1,0 +1,161 @@
+{% extends 'dashboard/zone_base.html' %}
+
+{% block title %}Red Tag Storage{% endblock %}
+
+{% block content %}
+<div class="p-6 dark:bg-gray-900 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold dark:text-gray-100 text-gray-900">Red Tag Storage</h1>
+            <span class="px-4 py-2 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded-lg">
+                {{ red_tag_count }} Items
+            </span>
+        </div>
+
+        <!-- Red Tag Items Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Issue</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Damage Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Required Action</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tagged Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for item in red_tag_items %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 dark:text-gray-300">{{ item.asset.asset_id }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ item.asset.get_asset_type_display }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900 dark:text-gray-300">{{ item.issue.title }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ item.issue.description|truncatechars:50 }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs rounded-full
+                                    {% if item.damage_category == 'structural' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                    {% elif item.damage_category == 'functional' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                    {% elif item.damage_category == 'safety' %}bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400
+                                    {% else %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400{% endif %}">
+                                    {{ item.get_damage_category_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                                {{ item.get_action_required_display }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                {{ item.created_at|date:"M d, Y" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs rounded-full {% if item.resolved %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400{% else %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400{% endif %}">
+                                    {{ item.resolved|yesno:"Resolved,Pending" }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button onclick="viewRedTagDetails('{{ item.id }}')" 
+                                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                No items in red tag storage
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Red Tag Details Modal -->
+<div id="redTagDetailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-2/3 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="flex justify-between items-center border-b pb-4 mb-4 dark:border-gray-700">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Red Tag Details</h3>
+            <button onclick="closeRedTagDetails()" class="text-gray-400 hover:text-gray-500">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="redTagDetailsContent" class="space-y-4">
+            <!-- Content will be populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewRedTagDetails(itemId) {
+        fetch(`/api/red-tag/${itemId}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const content = document.getElementById('redTagDetailsContent');
+                content.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Asset</p>
+                            <p class="text-lg text-gray-900 dark:text-gray-100">${data.asset.type} - ${data.asset.id}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Issue</p>
+                            <p class="text-lg text-gray-900 dark:text-gray-100">${data.issue.title}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Damage Category</p>
+                            <p class="text-lg text-gray-900 dark:text-gray-100">${data.damage_category}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Required Action</p>
+                            <p class="text-lg text-gray-900 dark:text-gray-100">${data.action_required}</p>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</p>
+                            <p class="text-lg text-gray-900 dark:text-gray-100">${data.notes}</p>
+                        </div>
+                        ${data.issue.image ? `
+                            <div class="col-span-2">
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Issue Image</p>
+                                <img src="${data.issue.image}" alt="Issue Image" class="mt-2 rounded-lg max-h-64">
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                document.getElementById('redTagDetailsModal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load red tag details. Please try again later.');
+            });
+    }
+
+    function closeRedTagDetails() {
+        document.getElementById('redTagDetailsModal').classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('redTagDetailsModal');
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeRedTagDetails();
+            }
+        };
+    });
+</script>
+{% endblock %}

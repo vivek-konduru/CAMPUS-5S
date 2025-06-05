@@ -1,0 +1,589 @@
+{% extends 'base.html' %}
+
+{% block title %}Users Management{% endblock %}
+
+{% block content %}
+{% if messages %}
+<script>
+  {% for message in messages %}
+    {% if 'error' in message.tags or 'warning' in message.tags %}
+      alert("{{ message|escapejs }}");
+    {% endif %}
+  {% endfor %}
+</script>
+{% endif %}
+<!-- Main container -->
+<div class="p-6 dark:bg-gray-900 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold dark:text-gray-100 text-gray-900">Users Management</h1>
+            <button onclick="openModal()" class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Add New User
+            </button>
+        </div>
+
+        <!-- Modals - Update background and text colors -->
+        <div id="createUserModal" class="hidden fixed inset-0 dark:bg-gray-900 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md dark:bg-gray-800 bg-white dark:border-gray-700 border-gray-200 z-50">
+                <div class="mt-3">
+                    <!-- Close button in create modal -->
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium dark:text-gray-100 text-gray-900">Create New User</h3>
+                        <button onclick="closeModal()" class="dark:text-gray-400 text-gray-600 dark:hover:text-gray-300 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="createUserForm" method="POST" action="{% url 'create_user' %}">
+                        {% csrf_token %}
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Username</label>
+                                <input type="text" name="username" required 
+                                       class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Email</label>
+                                <input type="email" name="email" required 
+                                       class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <!-- Add Password Field -->
+                            <div>
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Password</label>
+                                <input type="password" name="password" required 
+                                       class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Role</label>
+                                <select name="role" id="roleSelect" onchange="handleRoleChange()" required 
+                                       class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                                    <option value="">Select Role</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="zone_leader">Zone Leader</option>
+                                    <option value="cell_leader">Cell Leader</option>
+                                </select>
+                            </div>
+                            <div id="zoneField" class="hidden">
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Zone</label>
+                                <select name="zone" id="zoneSelect" onchange="handleZoneChange()" 
+                                        class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                                    <option value="">Select Zone</option>
+                                    {% for zone in zones %}
+                                    <option value="{{ zone.id }}">{{ zone.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div id="cellField" class="hidden">
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Cell</label>
+                                <select name="cell" id="cellSelect" 
+                                        class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                                    <option value="">Select Cell</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" onclick="closeModal()" class="bg-gray-600 text-gray-200 px-4 py-2 rounded-lg hover:bg-gray-700">Cancel</button>
+                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Create User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add this near the end of your template -->
+        <!-- Edit User Modal -->
+        <div id="editUserModal" class="hidden fixed inset-0 dark:bg-gray-900 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md dark:bg-gray-800 bg-white dark:border-gray-700 border-gray-200">
+                <div class="mt-3">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium dark:text-gray-100 text-gray-900">Edit User</h3>
+                        <button onclick="closeEditModal()" class="dark:text-gray-400 text-gray-600 dark:hover:text-gray-300 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="editUserForm" method="POST" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="user_id" id="editUserId">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Username</label>
+                                <input type="text" id="editUsername" name="username" required 
+                                       class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Email</label>
+                                <input type="email" id="editEmail" name="email" required 
+                                       class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Role</label>
+                                <select name="role" id="editRoleSelect" onchange="handleEditRoleChange()" required 
+                                        class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                                    <option value="">Select Role</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="zone_leader">Zone Leader</option>
+                                    <option value="cell_leader">Cell Leader</option>
+                                </select>
+                            </div>
+                            <div id="editZoneField" class="hidden">
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Zone</label>
+                                <select name="zone" id="editZoneSelect" onchange="handleEditZoneChange()" 
+                                        class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                                    <option value="">Select Zone</option>
+                                    {% for zone in zones %}
+                                    <option value="{{ zone.id }}">{{ zone.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div id="editCellField" class="hidden">
+                                <label class="block text-sm font-medium dark:text-gray-400 text-gray-600 mb-2">Cell</label>
+                                <select name="cell" id="editCellSelect" 
+                                        class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500">
+                                    <option value="">Select Cell</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" onclick="closeEditModal()" 
+                                    class="dark:bg-gray-600 bg-gray-200 dark:text-gray-200 text-gray-700 px-4 py-2 rounded-lg dark:hover:bg-gray-700 hover:bg-gray-300">Cancel</button>
+                            <button type="submit" 
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="deleteConfirmModal" class="hidden fixed inset-0 dark:bg-gray-900 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md dark:bg-gray-800 bg-white dark:border-gray-700 border-gray-200">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg font-medium dark:text-gray-100 text-gray-900 mb-4">Confirm Delete</h3>
+                    <p class="dark:text-gray-300 text-gray-600">Are you sure you want to delete user <span id="deleteUserName" class="font-semibold"></span>?</p>
+                    <div class="flex justify-center space-x-3 mt-6">
+                        <button onclick="closeDeleteModal()" 
+                                class="dark:bg-gray-600 bg-gray-200 dark:text-gray-200 text-gray-700 px-4 py-2 rounded-lg dark:hover:bg-gray-700 hover:bg-gray-300">Cancel</button>
+                        <button onclick="executeDelete()" 
+                                class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-4 gap-4 mb-6">
+            <!-- Total Users card is already updated, keeping it unchanged -->
+            <div class="dark:bg-gray-800 bg-white p-4 rounded-lg border dark:border-gray-700 border-gray-200">
+                <p class="dark:text-gray-400 text-gray-600 text-sm">Total Users</p>
+                <p class="text-2xl font-bold dark:text-white text-gray-900">{{ total_users }}</p>
+            </div>
+
+            <!-- Updated Admin card -->
+            <div class="dark:bg-gray-800 bg-white p-4 rounded-lg border dark:border-gray-700 border-gray-200">
+                <p class="dark:text-gray-400 text-gray-600 text-sm">Admins</p>
+                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ admin_count }}</p>
+            </div>
+
+            <!-- Updated Zone Leaders card -->
+            <div class="dark:bg-gray-800 bg-white p-4 rounded-lg border dark:border-gray-700 border-gray-200">
+                <p class="dark:text-gray-400 text-gray-600 text-sm">Zone Leaders</p>
+                <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ zone_leader_count }}</p>
+            </div>
+
+            <!-- Updated Cell Leaders card -->
+            <div class="dark:bg-gray-800 bg-white p-4 rounded-lg border dark:border-gray-700 border-gray-200">
+                <p class="dark:text-gray-400 text-gray-600 text-sm">Cell Leaders</p>
+                <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ cell_leader_count }}</p>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="dark:bg-gray-800 bg-white rounded-xl shadow-lg border dark:border-gray-700 border-gray-200 overflow-hidden">
+            <div class="p-6">
+                <!-- Search input -->
+                <div class="mb-6">
+                    <div class="flex gap-2 max-w-md">
+                        <div class="relative flex-1">
+                            <input type="text" 
+                                   id="searchInput"
+                                   value="{{ search_query }}"
+                                   placeholder="Search users..." 
+                                   onkeypress="if(event.key === 'Enter') handleSearch()"
+                                   class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 dark:text-gray-400 text-gray-600"></i>
+                        </div>
+                        <button onclick="handleSearch()" 
+                                class="px-4 py-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table headers -->
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left dark:text-gray-400 text-gray-600 border-b dark:border-gray-700 border-gray-200">
+                            <th class="pb-4">User</th>
+                            <th class="pb-4">Role</th>
+                            <th class="pb-4">Zone</th>
+                            <th class="pb-4">Cell</th>
+                            <th class="pb-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="border-b dark:border-gray-700 border-gray-200">
+                            <td class="py-4">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full overflow-hidden">
+                                        {% if user.userprofile.profile_pic %}
+                                            <img src="{{ user.userprofile.profile_pic.url }}" alt="{{ user.username }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                            <div class="w-full h-full dark:bg-gray-600 bg-gray-200 flex items-center justify-center dark:text-white text-gray-700">
+                                                {{ user.username|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <p class="dark:text-gray-200 text-gray-900">{{ user.username }}</p>
+                                        <p class="dark:text-gray-400 text-gray-600 text-sm">{{ user.email }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4">
+                                <span class="px-3 py-1 {% if user.is_staff %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400{% elif user.userprofile.role == 'zone_leader' %}bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400{% else %}bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400{% endif %} rounded-full text-sm">
+                                    {% if user.is_staff %}
+                                        Admin
+                                    {% else %}
+                                        {{ user.userprofile.get_role_display }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <!-- For Zone column -->
+                            <td class="py-4">
+                                {% if user.userprofile.role == 'cell_leader' %}
+                                    {% if user.userprofile.zone %}
+                                        <span class="dark:text-gray-200 text-gray-900">{{ user.userprofile.zone.name }}</span>
+                                    {% elif user.userprofile.cell.zone %}
+                                        <span class="dark:text-gray-200 text-gray-900">{{ user.userprofile.cell.zone.name }}</span>
+                                    {% else %}
+                                        <span class="dark:text-gray-500 text-gray-400">-</span>
+                                    {% endif %}
+                                {% elif user.userprofile.role == 'zone_leader' and user.userprofile.zone %}
+                                    <span class="dark:text-gray-200 text-gray-900">{{ user.userprofile.zone.name }}</span>
+                                {% else %}
+                                    <span class="dark:text-gray-500 text-gray-400">-</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- For Cell column -->
+                            <td class="py-4">
+                                {% if user.userprofile.role == 'cell_leader' %}
+                                    {% if user.userprofile.cell %}
+                                        <span class="dark:text-gray-200 text-gray-900">{{ user.userprofile.cell.name }}</span>
+                                    {% else %}
+                                        <span class="dark:text-gray-500 text-gray-400">No cell assigned</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="dark:text-gray-500 text-gray-400">-</span>
+                                {% endif %}
+                            </td>
+                            <!-- Action buttons in table -->
+                            <td class="py-4">
+                                <div class="flex space-x-2">
+                                    <button 
+                                        onclick="openEditModal(
+                                            '{{ user.id }}',
+                                            '{{ user.username|escapejs }}',
+                                            '{{ user.email|escapejs }}',
+                                            '{{ user.is_staff|yesno:'admin,'}}{{ user.userprofile.role }}',
+                                            '{{ user.userprofile.zone.id|default:'' }}',
+                                            '{{ user.userprofile.cell.id|default:'' }}'
+                                        )" 
+                                        class="dark:text-blue-400 text-blue-600 dark:hover:text-blue-300 hover:text-blue-700">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="confirmDelete('{{ user.id }}', '{{ user.username }}')"
+                                            class="dark:text-red-400 text-red-600 dark:hover:text-red-300 hover:text-red-700">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table >
+            </div>
+        </div>
+            </table>
+            
+            <!-- Pagination -->
+            {% if users.paginator.num_pages > 1 %}
+            <div class="mt-6 flex justify-between items-center">
+                <div class="text-sm dark:text-gray-400 text-gray-600">
+                    Showing {{ users.start_index }} to {{ users.end_index }} of {{ users.paginator.count }} users
+                </div>
+                <div class="flex space-x-2">
+                    {% if users.has_previous %}
+                    <a href="?page={{ users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-1 dark:bg-gray-700 bg-gray-200 dark:text-gray-300 text-gray-700 rounded dark:hover:bg-gray-600 hover:bg-gray-300">
+                        Previous
+                    </a>
+                    {% endif %}
+                    
+                    {% for num in users.paginator.page_range %}
+                        {% if num == users.number %}
+                        <span class="px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
+                        {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                           class="px-3 py-1 dark:bg-gray-700 bg-gray-200 dark:text-gray-300 text-gray-700 rounded dark:hover:bg-gray-600 hover:bg-gray-300">
+                            {{ num }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if users.has_next %}
+                    <a href="?page={{ users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                       class="px-3 py-1 dark:bg-gray-700 bg-gray-200 dark:text-gray-300 text-gray-700 rounded dark:hover:bg-gray-600 hover:bg-gray-300">
+                        Next
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+            <!-- Add this script at the bottom of your template -->
+
+<script>
+// Add this debug function
+function debugLog(message, data) {
+    console.log(message, data);
+}
+
+// Replace/update the role change handlers
+function handleRoleChange() {
+    const role = document.getElementById('roleSelect').value;
+    const zoneField = document.getElementById('zoneField');
+    const cellField = document.getElementById('cellField');
+    const zoneSelect = document.getElementById('zoneSelect');
+
+    zoneField.classList.add('hidden');
+    cellField.classList.add('hidden');
+
+    if (role === 'zone_leader' || role === 'cell_leader') {
+        zoneField.classList.remove('hidden');
+        loadZones(zoneSelect);
+        
+        if (role === 'cell_leader') {
+            cellField.classList.remove('hidden');
+        }
+    }
+}
+
+function handleEditRoleChange() {
+    const role = document.getElementById('editRoleSelect').value;
+    const zoneField = document.getElementById('editZoneField');
+    const cellField = document.getElementById('editCellField');
+    const zoneSelect = document.getElementById('editZoneSelect');
+
+    // First hide both fields
+    zoneField.classList.add('hidden');
+    cellField.classList.add('hidden');
+
+    // Show zone field for both zone_leader and cell_leader
+    if (role === 'zone_leader' || role === 'cell_leader') {
+        zoneField.classList.remove('hidden');
+        loadZones(zoneSelect);
+        
+        // Show cell field only for cell_leader
+        if (role === 'cell_leader') {
+            cellField.classList.remove('hidden');
+            if (zoneSelect.value) {
+                handleEditZoneChange();
+            }
+        }
+    }
+}
+
+// Update loadZones to return a promise
+function loadZones(selectElement, selectedZoneId = '') {
+    debugLog('Loading zones with selected:', selectedZoneId);
+    
+    return fetch('/get-zones/', {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(zones => {
+        selectElement.innerHTML = '<option value="">Select Zone</option>';
+        zones.forEach(zone => {
+            const option = document.createElement('option');
+            option.value = zone.id;
+            option.textContent = zone.name;
+            if (zone.id == selectedZoneId) {
+                option.selected = true;
+            }
+            selectElement.appendChild(option);
+        });
+        debugLog('Zones loaded:', zones);
+    });
+}
+
+function openModal() {
+    document.getElementById('createUserModal').classList.remove('hidden');
+    // Load zones for create modal
+    loadZones(document.getElementById('zoneSelect'));
+}
+
+function closeModal() {
+    document.getElementById('createUserModal').classList.add('hidden');
+}
+
+function handleZoneChange() {
+    const zoneId = document.getElementById('zoneSelect').value;
+    const cellSelect = document.getElementById('cellSelect');
+    
+    if (!zoneId) {
+        cellSelect.innerHTML = '<option value="">Select Cell</option>';
+        return;
+    }
+
+    // Fetch cells for selected zone
+    fetch(`/api/zones/${zoneId}/cells/`)
+        .then(response => response.json())
+        .then(cells => {
+            cellSelect.innerHTML = '<option value="">Select Cell</option>';
+            cells.forEach(cell => {
+                cellSelect.innerHTML += `<option value="${cell.id}">${cell.name}</option>`;
+            });
+        });
+}
+
+function openEditModal(userId, username, email, role, zoneId, cellId) {
+    debugLog('Opening edit modal with:', { userId, username, email, role, zoneId, cellId });
+    
+    const form = document.getElementById('editUserForm');
+    const modal = document.getElementById('editUserModal');
+    
+    form.action = `/users/edit/${userId}/`;
+    document.getElementById('editUserId').value = userId;
+    document.getElementById('editUsername').value = username;
+    document.getElementById('editEmail').value = email;
+    document.getElementById('editRoleSelect').value = role;
+    
+    const zoneField = document.getElementById('editZoneField');
+    const cellField = document.getElementById('editCellField');
+    
+    // Reset visibility
+    zoneField.classList.add('hidden');
+    cellField.classList.add('hidden');
+    
+    if (role === 'cell_leader' || role === 'zone_leader') {
+        zoneField.classList.remove('hidden');
+        
+        // For cell leaders, show cell field and load cells
+        if (role === 'cell_leader') {
+            cellField.classList.remove('hidden');
+        }
+        
+        // Load zones
+        loadZones(document.getElementById('editZoneSelect'), zoneId)
+            .then(() => {
+                if (role === 'cell_leader' && zoneId) {
+                    return handleEditZoneChange()
+                        .then(() => {
+                            if (cellId) {
+                                document.getElementById('editCellSelect').value = cellId;
+                            }
+                        });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+            });
+    }
+    
+    // Show modal after setting up data
+    modal.classList.remove('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('editUserModal').classList.add('hidden');
+}
+
+function handleEditZoneChange() {
+    const zoneId = document.getElementById('editZoneSelect').value;
+    const cellSelect = document.getElementById('editCellSelect');
+    
+    debugLog('Edit zone changed to:', zoneId);
+    
+    if (!zoneId) {
+        cellSelect.innerHTML = '<option value="">Select Cell</option>';
+        return Promise.resolve();
+    }
+
+    return fetch(`/api/zones/${zoneId}/cells/`)
+        .then(response => response.json())
+        .then(cells => {
+            debugLog('Fetched cells:', cells);
+            cellSelect.innerHTML = '<option value="">Select Cell</option>';
+            cells.forEach(cell => {
+                const option = document.createElement('option');
+                option.value = cell.id;
+                option.textContent = cell.name;
+                cellSelect.appendChild(option);
+            });
+        });
+}
+
+function handleSearch() {
+    const searchQuery = document.getElementById('searchInput').value.trim();
+    window.location.href = searchQuery 
+        ? `/users/?search=${encodeURIComponent(searchQuery)}`
+        : `/users/`;
+}
+// Delete-related functions
+let deleteUserId = null;
+        
+function confirmDelete(userId, username) {
+    deleteUserId = userId;
+    document.getElementById('deleteUserName').textContent = username;
+    document.getElementById('deleteConfirmModal').classList.remove('hidden');
+}
+        
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+    deleteUserId = null;
+}
+        
+function executeDelete() {
+    if (!deleteUserId) return;
+            
+    fetch(`/users/delete/${deleteUserId}/`, {  // Make sure this matches your URL pattern
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        credentials: 'same-origin'
+    }).then(response => response.json())  // Parse JSON response
+      .then(data => {
+          if (data.status === 'success') {
+              window.location.reload();
+          } else {
+              alert(`Error: ${data.message}`);
+          }
+      })
+      .catch(error => {
+          alert(`Error: ${error.message}`);
+      });
+}
+</script>
+
+
+{% endblock content %}  <!-- Add this closing tag -->

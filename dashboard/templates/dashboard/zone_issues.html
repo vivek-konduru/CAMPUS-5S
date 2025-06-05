@@ -1,0 +1,788 @@
+{% extends 'dashboard/zone_base.html' %}
+
+{% block title %}Zone Issues Management{% endblock title %}
+
+{% block content %}
+{% csrf_token %}
+<div class="p-6 dark:bg-gray-900 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold dark:text-gray-100 text-gray-900">Zone Issues Management</h1>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-4 gap-6 mb-8">
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-yellow-600 dark:text-yellow-400">Total Issues</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ total_issues|default:0|add:0 }}</p>
+                    </div>
+                    <div class="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-full">
+                        <i class="fas fa-exclamation-circle text-2xl text-yellow-600 dark:text-yellow-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-orange-600 dark:text-orange-400">Pending</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ pending_issues|default:0|add:0 }}</p>
+                    </div>
+                    <div class="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-full">
+                        <i class="fas fa-clock text-2xl text-orange-600 dark:text-orange-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-green-600 dark:text-green-400">Approved</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ approved_issues|default:0|add:0 }}</p>
+                    </div>
+                    <div class="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
+                        <i class="fas fa-check-circle text-2xl text-green-600 dark:text-green-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border dark:border-gray-700 border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-red-600 dark:text-red-400">Rejected</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ rejected_issues|default:0|add:0 }}</p>
+                    </div>
+                    <div class="bg-red-100 dark:bg-red-900/30 p-3 rounded-full">
+                        <i class="fas fa-times-circle text-2xl text-red-600 dark:text-red-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issues Table -->
+        <!-- Copy the entire table structure from issues.html -->
+        <div class="dark:bg-gray-800 bg-white rounded-xl shadow-lg border dark:border-gray-700 border-gray-200 overflow-hidden">
+            <div class="p-6">
+                <!-- Search Form -->
+                <div class="mb-6">
+                    <div class="flex gap-2 max-w-md">
+                        <div class="relative flex-1">
+                            <input type="text" 
+                                   id="searchInput"
+                                   value="{{ search_query }}"
+                                   placeholder="Search issues..." 
+                                   onkeyup="if(event.key === 'Enter') handleSearch()"
+                                   class="w-full dark:bg-gray-700 bg-gray-100 dark:text-gray-200 text-gray-900 border dark:border-gray-600 border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 dark:text-gray-400 text-gray-600"></i>
+                        </div>
+                        <button onclick="handleSearch()" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center whitespace-nowrap">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <table class="w-full">
+                    <thead class="dark:bg-gray-700 bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Issue</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Cell</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Created By</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Created</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y dark:divide-gray-700 divide-gray-200">
+                        {% for issue in issues %}
+                        <tr class="dark:hover:bg-gray-700 hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div>
+                                        <div class="text-sm font-medium dark:text-gray-100 text-gray-900">
+                                            {{ issue.title }}
+                                        </div>
+                                        <div class="text-sm dark:text-gray-400 text-gray-500">
+                                            {{ issue.description|truncatechars:100 }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm dark:text-gray-100 text-gray-900">{{ issue.cell.name }}</span>
+                                <div class="text-xs dark:text-gray-400 text-gray-500">{{ issue.cell.zone.name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm dark:text-gray-100 text-gray-900">{{ issue.created_by.username }}</span>
+                            </td>
+                            <td class="py-4">
+                                <span class="px-3 py-1 rounded-full text-sm
+                                    {% if issue.status == 'pending' %}bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400
+                                    {% elif issue.status == 'approved' %}bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400
+                                    {% elif issue.status == 'rejected' %}bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400{% endif %}">
+                                    {{ issue.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-4 dark:text-gray-400 text-gray-600">{{ issue.created_at|timesince }} ago</td>
+                            <td class="py-4">
+                                <div class="flex space-x-3">
+                                    <button onclick="viewIssueDetails('{{ issue.id }}')" 
+                                            class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                        Details
+                                    </button>
+                                    <button onclick="viewIssueImages('{% if issue.image %}{{ issue.image.url }}{% endif %}', '{% if issue.after_image %}{{ issue.after_image.url }}{% endif %}')"
+                                            class="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                                        <i class="fas fa-image mr-1"></i> Images
+                                    </button>
+                                    <button onclick="openCommentModal('{{ issue.id }}')"
+                                            class="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                                        <i class="far fa-comment-alt mr-1"></i> Comment
+                                    </button>
+                                    {% if issue.status == 'pending' %}
+                                        <button onclick="approveIssue('{{ issue.id }}')"
+                                                class="text-green-600 hover:text-green-800 text-sm font-medium">
+                                            <i class="fas fa-check mr-1"></i> Approve
+                                        </button>
+                                        <button onclick="rejectIssue('{{ issue.id }}')"
+                                                class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                            <i class="fas fa-times mr-1"></i> Reject
+                                        </button>
+                                    {% endif %}
+                                    <button onclick="deleteIssue('{{ issue.id }}')"
+                                            class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                        <i class="fas fa-trash mr-1"></i> Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center dark:text-gray-400 text-gray-500">
+                                No issues found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <!-- ... -->
+
+        <!-- Copy all modals from issues.html -->
+<!-- Comment Modal -->
+<div id="commentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="flex justify-between items-center border-b pb-4 mb-4 dark:border-gray-700">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Add Comment</h3>
+            <button onclick="closeCommentModal()" class="text-gray-400 hover:text-gray-500">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <textarea id="commentContent" 
+                      class="w-full dark:bg-gray-700 bg-gray-50 dark:text-gray-200 text-gray-900 border dark:border-gray-600 border-gray-300 rounded-lg p-4 focus:outline-none focus:border-blue-500"
+                      rows="4"
+                      placeholder="Enter your comment..."></textarea>
+            <div class="flex justify-end">
+                <button onclick="submitComment()" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
+                    Submit Comment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Issue Details Modal -->
+<div id="issueDetailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-3/4 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="flex justify-between items-center border-b pb-4 mb-4 dark:border-gray-700">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100" id="modalIssueTitle"></h3>
+            <button onclick="closeIssueDetails()" class="text-gray-400 hover:text-gray-500">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</h4>
+                <p class="mt-1 text-gray-900 dark:text-gray-100" id="modalIssueDescription"></p>
+            </div>
+            
+            <!-- Image Section -->
+            <div id="imageSection" class="hidden">
+                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Attached Image</h4>
+                <img id="modalIssueImage" class="mt-2 max-h-96 rounded-lg" alt="Issue Image">
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Cell</h4>
+                    <p class="mt-1 text-gray-900 dark:text-gray-100" id="modalIssueCell"></p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Zone</h4>
+                    <p class="mt-1 text-gray-900 dark:text-gray-100" id="modalIssueZone"></p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Priority Level</h4>
+                    <p class="mt-1" id="modalIssuePriority"></p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Affected Asset</h4>
+                    <p class="mt-1 text-gray-900 dark:text-gray-100" id="modalIssueAsset"></p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Created By</h4>
+                    <p class="mt-1 text-gray-900 dark:text-gray-100" id="modalIssueCreator"></p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Created At</h4>
+                    <p class="mt-1 text-gray-900 dark:text-gray-100" id="modalIssueDate"></p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</h4>
+                    <p class="mt-1" id="modalIssueStatus"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rest of the modal content -->
+        <div class="border-t dark:border-gray-700 pt-4 mt-4">
+            <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Comments</h4>
+            <div class="space-y-4" id="modalIssueComments">
+                <!-- Comments will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Red Tag Modal -->
+<div id="redTagModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="flex justify-between items-center border-b pb-4 mb-4 dark:border-gray-700">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Red Tag Details</h3>
+            <button onclick="closeRedTagModal()" class="text-gray-400 hover:text-gray-500">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Damage Category</label>
+                <select id="redTagCategory" class="mt-1 w-full rounded-md border dark:border-gray-600 dark:bg-gray-700 p-2">
+                    <option value="structural">Structural Damage</option>
+                    <option value="functional">Functional Issue</option>
+                    <option value="safety">Safety Hazard</option>
+                    <option value="cosmetic">Cosmetic Damage</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Required Action</label>
+                <select id="redTagAction" class="mt-1 w-full rounded-md border dark:border-gray-600 dark:bg-gray-700 p-2">
+                    <option value="repair">Needs Repair</option>
+                    <option value="replace">Requires Replacement</option>
+                    <option value="dispose">Must be Disposed</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Notes</label>
+                <textarea id="redTagNotes" rows="3" class="mt-1 w-full rounded-md border dark:border-gray-600 dark:bg-gray-700 p-2"></textarea>
+            </div>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button onclick="closeRedTagModal()" class="px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">
+                    Cancel
+                </button>
+                <button onclick="submitRedTagDetails()" class="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700">
+                    Confirm Red Tag
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Images Preview Modal Here -->
+<div id="imagesPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-75 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 max-w-4xl">
+        <button onclick="closeImagesPreview()" class="absolute top-2 right-2 text-white text-xl">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <p class="text-white text-lg mb-2">Before Image</p>
+                <img id="beforeImagePreview" class="max-w-full h-auto rounded" src="" alt="Before Image">
+            </div>
+            <div class="flex-1" id="afterImageContainer">
+                <p class="text-white text-lg mb-2">After Image</p>
+                <img id="afterImagePreview" class="max-w-full h-auto rounded" src="" alt="After Image">
+                <!-- Add this message -->
+                <div id="afterImageMessage" class="hidden text-white mt-4 p-4 bg-gray-700 rounded-lg">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    After image not available - awaiting upload from cell leader
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Delete Issue</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Are you sure you want to delete this issue? This action cannot be undone.</p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button id="cancelDelete" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 mr-2">
+                    Cancel
+                </button>
+                <button id="confirmDelete" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Approve Confirmation Modal -->
+<div id="approveConfirmModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Approve Issue</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Are you sure you want to approve this issue? This action will mark the issue as resolved.</p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button id="cancelApprove" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 mr-2">
+                    Cancel
+                </button>
+                <button id="confirmApprove" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+                    Approve
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Red Tag Confirmation Modal -->
+<div id="redTagConfirmModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Move to Red Tag Storage</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Are you sure you want to move this item to Red Tag storage? This will mark the item for special handling.</p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button id="cancelRedTag" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 mr-2">
+                    Cancel
+                </button>
+                <button id="confirmRedTag" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+                    Move to Red Tag
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Global variables
+    let currentIssueId = null;
+    
+    // Issue Details Modal Functions
+    function viewIssueDetails(issueId) {
+        fetch(`/api/issues/${issueId}/details/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(issue => {
+                document.getElementById('modalIssueTitle').textContent = issue.title || '';
+                document.getElementById('modalIssueDescription').textContent = issue.description || '';
+                document.getElementById('modalIssueCell').textContent = issue.cell_name || '';
+                document.getElementById('modalIssueZone').textContent = issue.zone_name || '';
+                document.getElementById('modalIssueCreator').textContent = issue.created_by || '';
+                document.getElementById('modalIssueDate').textContent = issue.created_at || '';
+                
+                // Handle Priority Level
+                const priorityElement = document.getElementById('modalIssuePriority');
+                const priorityClass = issue.priority === 'Critical' ? 'text-red-600 bg-red-100' :
+                                issue.priority === 'High' ? 'text-orange-600 bg-orange-100' :
+                                issue.priority === 'Medium' ? 'text-yellow-600 bg-yellow-100' :
+                                'text-green-600 bg-green-100';
+                priorityElement.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityClass}`;
+                priorityElement.textContent = issue.priority || 'Low';
+
+                // Handle Asset Details
+                const assetElement = document.getElementById('modalIssueAsset');
+                if (issue.asset && issue.asset.type) {
+                    assetElement.textContent = `${issue.asset.type} - ${issue.asset.id}`;
+                } else {
+                    assetElement.textContent = 'No asset specified';
+                }
+                
+                // Handle Image
+                const imageSection = document.getElementById('imageSection');
+                const imageElement = document.getElementById('modalIssueImage');
+                if (issue.image) {
+                    imageElement.src = issue.image;
+                    imageSection.classList.remove('hidden');
+                } else {
+                    imageSection.classList.add('hidden');
+                }
+                
+                const statusElement = document.getElementById('modalIssueStatus');
+                const statusClass = issue.status === 'pending' ? 'text-orange-600' :
+                                  issue.status === 'approved' ? 'text-green-600' : 'text-red-600';
+                statusElement.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`;
+                statusElement.textContent = issue.status ? issue.status.charAt(0).toUpperCase() + issue.status.slice(1) : '';
+            
+                
+
+                // Add comments to the modal
+                const commentsContainer = document.getElementById('modalIssueComments');
+                commentsContainer.innerHTML = '';
+                
+                if (issue.comments && issue.comments.length > 0) {
+                    issue.comments.forEach(comment => {
+                        const commentElement = document.createElement('div');
+                        commentElement.className = 'bg-gray-50 dark:bg-gray-700 rounded-lg p-4';
+                        commentElement.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <span class="font-medium text-sm dark:text-gray-300">${comment.user}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">${comment.created_at}</span>
+                            </div>
+                            <p class="mt-2 text-sm dark:text-gray-300">${comment.content}</p>
+                        `;
+                        commentsContainer.appendChild(commentElement);
+                    });
+                } else {
+                    commentsContainer.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No comments yet</p>';
+                }
+                
+                document.getElementById('issueDetailsModal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load issue details. Please try again later.');
+            });
+    }
+
+    function closeIssueDetails() {
+        document.getElementById('issueDetailsModal').classList.add('hidden');
+    }
+
+    // Comment Modal Functions
+    function openCommentModal(issueId) {
+        currentIssueId = issueId;
+        document.getElementById('commentModal').classList.remove('hidden');
+        document.getElementById('commentContent').value = '';
+        document.getElementById('commentContent').focus();
+    }
+
+    function submitComment() {
+        const content = document.getElementById('commentContent').value.trim();
+        const issueId = currentIssueId; // Store the ID locally
+        
+        if (!content) {
+            alert('Please enter a comment before submitting.');
+            return;
+        }
+        
+        if (!issueId) {
+            alert('No issue selected');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('content', content);
+        
+        fetch(`/api/issues/${issueId}/comment/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                closeCommentModal();
+                // Use the stored issueId instead of currentIssueId
+                viewIssueDetails(issueId);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add comment. Please try again.');
+        });
+    }
+
+    // Update closeCommentModal to clear currentIssueId after viewIssueDetails is called
+    function closeCommentModal() {
+        document.getElementById('commentModal').classList.add('hidden');
+        document.getElementById('commentContent').value = '';
+        // Don't clear currentIssueId here anymore
+    }
+
+    // Issue Management Functions
+    function handleSearch() {
+        const searchQuery = document.getElementById('searchInput').value.trim();
+        window.location.href = searchQuery 
+            ? `/issues/?search=${encodeURIComponent(searchQuery)}`
+            : `/issues/`;
+    }
+
+    function approveIssue(issueId) {
+        const approveModal = document.getElementById('approveConfirmModal');
+        const confirmBtn = document.getElementById('confirmApprove');
+        const cancelBtn = document.getElementById('cancelApprove');
+        approveModal.classList.remove('hidden');
+    
+        const handleApprove = () => {
+            const redTagModal = document.getElementById('redTagConfirmModal');
+            const redTagConfirmBtn = document.getElementById('confirmRedTag');
+            const redTagCancelBtn = document.getElementById('cancelRedTag');
+            approveModal.classList.add('hidden');
+            redTagModal.classList.remove('hidden');
+    
+            const handleRedTag = () => {
+                fetch(`/api/issues/${issueId}/approve/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        move_to_red_tag: true
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        openRedTagModal(issueId);
+                    } else {
+                        alert('Failed to approve issue. Please try again.');
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to approve issue. Please try again.');
+                });
+                redTagModal.classList.add('hidden');
+            };
+    
+            const closeRedTagModal = () => {
+                redTagModal.classList.add('hidden');
+                fetch(`/api/issues/${issueId}/approve/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        move_to_red_tag: false
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
+            };
+    
+            redTagConfirmBtn.addEventListener('click', handleRedTag, { once: true });
+            redTagCancelBtn.addEventListener('click', closeRedTagModal, { once: true });
+        };
+    
+        const closeModal = () => {
+            approveModal.classList.add('hidden');
+            confirmBtn.removeEventListener('click', handleApprove);
+            cancelBtn.removeEventListener('click', closeModal);
+        };
+    
+        confirmBtn.addEventListener('click', handleApprove);
+        cancelBtn.addEventListener('click', closeModal);
+    
+        window.onclick = function(event) {
+            if (event.target == approveModal) {
+                closeModal();
+            }
+        };
+    }
+
+    // Red Tag Modal Functions
+    function openRedTagModal(issueId) {
+        currentIssueId = issueId;
+        document.getElementById('redTagModal').classList.remove('hidden');
+    }
+
+    function closeRedTagModal() {
+        document.getElementById('redTagModal').classList.add('hidden');
+        window.location.reload();
+    }
+
+    function submitRedTagDetails() {
+        const data = {
+            category: document.getElementById('redTagCategory').value,
+            action: document.getElementById('redTagAction').value,
+            notes: document.getElementById('redTagNotes').value
+        };
+
+        fetch(`/api/issues/${currentIssueId}/red-tag/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                closeRedTagModal();
+            } else {
+                alert('Failed to create red tag. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to create red tag. Please try again.');
+        });
+    }
+
+    function viewIssueImages(beforeImgUrl, afterImgUrl) {
+    const afterImageContainer = document.getElementById('afterImageContainer');
+    const afterImagePreview = document.getElementById('afterImagePreview');
+    const afterImageMessage = document.getElementById('afterImageMessage');
+    
+    // Handle before image
+    document.getElementById('beforeImagePreview').src = beforeImgUrl;
+    
+    // Handle after image
+    if (afterImgUrl) {
+        afterImagePreview.src = afterImgUrl;
+        afterImagePreview.style.display = 'block';
+        afterImageMessage.style.display = 'none';
+    } else {
+        afterImagePreview.style.display = 'none';
+        afterImageMessage.style.display = 'block';
+    }
+    
+    document.getElementById('imagesPreviewModal').classList.remove('hidden');
+}
+
+function closeImagesPreview() {
+    document.getElementById('imagesPreviewModal').classList.add('hidden');
+}
+
+
+    function deleteIssue(issueId) {
+        const deleteModal = document.getElementById('deleteConfirmModal');
+        const confirmBtn = document.getElementById('confirmDelete');
+        const cancelBtn = document.getElementById('cancelDelete');          
+        deleteModal.classList.remove('hidden');                        
+        
+        const handleDelete = () => {
+            fetch(`/api/zone-issues/${issueId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to delete issue. Please try again.');
+            });
+            deleteModal.classList.add('hidden');
+        };
+        
+        const closeModal = () => {
+            deleteModal.classList.add('hidden');
+            confirmBtn.removeEventListener('click', handleDelete);
+            cancelBtn.removeEventListener('click', closeModal);
+        };
+        
+        confirmBtn.addEventListener('click', handleDelete);
+        cancelBtn.addEventListener('click', closeModal);
+        
+        window.onclick = function(event) {
+            if (event.target == deleteModal) {
+                closeModal();
+            }
+        };
+    }
+
+    function rejectIssue(issueId) {
+        if (confirm('Are you sure you want to reject this issue?')) {
+            fetch(`/api/issues/${issueId}/reject/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to reject issue. Please try again.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Failed to reject issue. Please try again.');
+            });
+        }
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Event listener for Enter+Ctrl in comment textarea
+        document.getElementById('commentContent').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                submitComment();
+            }
+        });
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const detailsModal = document.getElementById('issueDetailsModal');
+            const commentModal = document.getElementById('commentModal');
+            const redTagModal = document.getElementById('redTagModal');
+            const imagesPreviewModal = document.getElementById('imagesPreviewModal');
+            if (event.target == detailsModal) {
+                closeIssueDetails();
+            }
+            if (event.target == commentModal) {
+                closeCommentModal();
+            }
+            if (event.target == redTagModal) {
+                closeRedTagModal();
+            }
+            if (event.target == imagesPreviewModal) {
+                closeImagesPreview();
+            }
+        };
+        
+        // Add console logging to help debug
+        console.log('DOM fully loaded');
+        console.log('CSRF Token available:', !!document.querySelector('[name=csrfmiddlewaretoken]'));
+    });
+</script>
+{% endblock content %}

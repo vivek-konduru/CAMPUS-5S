@@ -1,0 +1,114 @@
+{% extends 'dashboard/cell_base.html' %}
+
+{% block content %}
+<div class="p-6 dark:bg-gray-900 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold dark:text-gray-100 text-gray-900">My Cell</h1>
+            <div class="text-sm dark:text-gray-400 text-gray-600">
+                <div class="flex items-center dark:bg-gray-800 bg-white rounded-lg px-4 py-2 border dark:border-gray-700 border-gray-200">
+                    <div>
+                        <p class="dark:text-gray-400 text-gray-600 text-base font-medium">Cell Name</p>
+                        <p class="dark:text-white text-gray-900 text-lg font-bold">{{ user.userprofile.cell.name }}</p>
+                        <p class="text-blue-600 dark:text-blue-400 text-sm font-semibold">{{ total_members }} Members</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cell Information -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Cell Details -->
+            <div class="lg:col-span-2">
+                <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg border dark:border-gray-700 border-gray-200">
+                    <h2 class="text-xl font-semibold dark:text-gray-100 text-gray-900 mb-4">Cell Details</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm dark:text-gray-400 text-gray-600">Zone</p>
+                            <p class="text-lg dark:text-gray-100 text-gray-900">{{ user.userprofile.cell.zone.name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm dark:text-gray-400 text-gray-600">Description</p>
+                            <p class="text-lg dark:text-gray-100 text-gray-900">{{ user.userprofile.cell.description|default:"No description available" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg border dark:border-gray-700 border-gray-200">
+                <h2 class="text-xl font-semibold dark:text-gray-100 text-gray-900 mb-4">Quick Stats</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm dark:text-gray-400 text-gray-600">Total Members</p>
+                            <p class="text-2xl font-bold dark:text-gray-100 text-gray-900">{{ total_members }}</p>
+                        </div>
+                        <div class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
+                            <i class="fas fa-users text-xl text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm dark:text-gray-400 text-gray-600">Total Issues</p>
+                            <p class="text-2xl font-bold dark:text-gray-100 text-gray-900">{{ total_issues }}</p>
+                        </div>
+                        <div class="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-full">
+                            <i class="fas fa-exclamation-circle text-xl text-purple-600 dark:text-purple-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members List -->
+        <div class="mt-8">
+            <div class="dark:bg-gray-800 bg-white rounded-xl shadow-lg border dark:border-gray-700 border-gray-200">
+                <div class="p-6 border-b dark:border-gray-700 border-gray-200">
+                    <h2 class="text-xl font-semibold dark:text-gray-100 text-gray-900">Cell Members</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="dark:bg-gray-700 bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 text-gray-500 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y dark:divide-gray-700 divide-gray-200">
+                            {% for member in members %}
+                            <tr class="dark:hover:bg-gray-700 hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full overflow-hidden mr-3">
+                                            {% if member.profile_pic %}
+                                                <img src="{{ member.profile_pic.url }}" alt="{{ member.user.username }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                <div class="w-full h-full dark:bg-gray-600 bg-blue-100 flex items-center justify-center dark:text-white text-blue-600 font-semibold">
+                                                    {{ member.user.username|first|upper }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="dark:text-gray-100 text-gray-900">{{ member.user.username }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap dark:text-gray-100 text-gray-900">{{ member.get_role_display }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap dark:text-gray-100 text-gray-900">{{ member.user.email }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                        Active
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

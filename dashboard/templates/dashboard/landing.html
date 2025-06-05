@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - 3S Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+        .animate-slide-up {
+            animation: slideUp 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-white min-h-screen">
+    <div class="relative">
+        <!-- Add logo -->
+        <div class="absolute top-4 left-4 animate-fade-in">
+            <img src="https://tuningfork-live.s3.amazonaws.com/nttf2/files/logos/logo.png" 
+                 alt="NTTF Logo" 
+                 class="w-[152px] h-[64px] shadow-lg rounded"
+                 style="box-shadow: 0 5px 10px #333333;">
+        </div>
+
+        <!-- Existing login button -->
+        <div class="absolute top-4 right-4 animate-fade-in">
+            <a href="{% url 'login' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-blue-500/30 transition duration-300">
+                <i class="fas fa-sign-in-alt mr-2"></i>Login
+            </a>
+        </div>
+
+        <!-- Rest of the content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32">
+            <div class="text-center mb-20 animate-fade-in">
+                <h1 class="text-6xl font-bold text-gray-800 mb-6 leading-tight">
+                    CAMPUS 5S
+                </h1>
+                <p class="text-2xl text-blue-600 font-medium">Streamline, Simplify, Succeed</p>
+                <p class="text-xl text-gray-600 mt-4 max-w-2xl mx-auto">
+                    Transform your workplace with the power of 5S principles. 
+                    Enhance productivity and maintain excellence through systematic organization.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+                <div class="bg-white/90 backdrop-blur-sm rounded-xl p-8 border border-gray-200 transform hover:scale-105 transition-all duration-300 hover:shadow-xl animate-slide-up" style="animation-delay: 0.2s">
+                    <div class="text-blue-600 text-4xl mb-6 bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center">
+                        <i class="fas fa-sort-amount-down"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Seiri (Sort)</h3>
+                    <p class="text-gray-600 text-lg leading-relaxed">
+                        Organize and prioritize resources effectively. Separate necessary from unnecessary items to maintain clarity and efficiency in your workspace.
+                    </p>
+                    <div class="mt-6 text-blue-600">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white/90 backdrop-blur-sm rounded-xl p-8 border border-gray-200 transform hover:scale-105 transition-all duration-300 hover:shadow-xl animate-slide-up" style="animation-delay: 0.4s">
+                    <div class="text-purple-600 text-4xl mb-6 bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Seiton (Set in Order)</h3>
+                    <p class="text-gray-600 text-lg leading-relaxed">
+                        Arrange items systematically. Ensure everything has a designated place for maximum accessibility and productivity in daily operations.
+                    </p>
+                    <div class="mt-6 text-purple-600">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white/90 backdrop-blur-sm rounded-xl p-8 border border-gray-200 transform hover:scale-105 transition-all duration-300 hover:shadow-xl animate-slide-up" style="animation-delay: 0.6s">
+                    <div class="text-indigo-600 text-4xl mb-6 bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Seiso (Shine)</h3>
+                    <p class="text-gray-600 text-lg leading-relaxed">
+                        Maintain cleanliness and order. Regular maintenance ensures optimal performance and identifies potential issues early in the process.
+                    </p>
+                    <div class="mt-6 text-indigo-600">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-20 pb-12 animate-fade-in">
+                <p class="text-gray-600 text-lg">
+                    Start your journey towards workplace excellence
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

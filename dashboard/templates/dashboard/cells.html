@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+
+{% block title %}Cells Management{% endblock %}
+
+{% block content %}
+<div class="p-6 dark:bg-gray-900 bg-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-100">Cells Management</h1>
+            <button onclick="openAddCellModal()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Add New Cell
+            </button>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="grid grid-cols-2 gap-6 mb-8">
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 dark:border-gray-700 border-gray-200 border">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400">Total Cells</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ total_cells }}</p>
+                        <p class="text-sm dark:text-gray-400 text-gray-600 mt-1">Active cells</p>
+                    </div>
+                    <div class="dark:bg-indigo-900/30 bg-indigo-100 p-3 rounded-full">
+                        <i class="fas fa-th text-2xl dark:text-indigo-400 text-indigo-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dark:bg-gray-800 bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 dark:border-gray-700 border-gray-200 border">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold text-purple-600 dark:text-purple-400">Total Zones</h3>
+                        <p class="text-3xl font-bold dark:text-gray-100 text-gray-900 mt-2">{{ zones.count }}</p>
+                        <p class="text-sm dark:text-gray-400 text-gray-600 mt-1">Active zones</p>
+                    </div>
+                    <div class="dark:bg-purple-900/30 bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-map-marker-alt text-2xl dark:text-purple-400 text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cells Table -->
+        <div class="dark:bg-gray-800 bg-white rounded-xl shadow-lg dark:border-gray-700 border-gray-200 border overflow-hidden">
+            <div class="p-6">
+                <!-- Search Form -->
+                <div class="mb-6">
+                    <div class="flex gap-2 max-w-md">
+                        <div class="relative flex-1">
+                            <input type="text" 
+                                   id="searchInput"
+                                   value="{{ search_query }}"
+                                   placeholder="Search cells..." 
+                                   onkeyup="if(event.key === 'Enter') handleSearch()"
+                                   class="w-full dark:bg-gray-700 bg-white dark:text-gray-200 text-gray-900 dark:border-gray-600 border-gray-400 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 dark:text-gray-400 text-gray-600"></i>
+                        </div>
+                        <button onclick="handleSearch()" 
+                               class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center whitespace-nowrap">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left dark:text-gray-400 text-gray-600 border-b dark:border-gray-700 border-gray-200">
+                            <th class="pb-4">Cell Name</th>
+                            <th class="pb-4">Description</th>
+                            <th class="pb-4">Zone</th>
+                            <th class="pb-4">Zone Leader</th>
+                            <th class="pb-4">Cell Leader</th>
+                            <th class="pb-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cell in cells %}
+                        <tr class="border-b dark:border-gray-700 border-gray-200">
+                            <td class="py-4">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full dark:bg-indigo-900/30 bg-indigo-100 flex items-center justify-center dark:text-indigo-400 text-indigo-600 mr-3">
+                                        <i class="fas fa-th"></i>
+                                    </div>
+                                    <span class="dark:text-gray-200 text-gray-900">{{ cell.name }}</span>
+                                </div>
+                            </td>
+                            <td class="py-4">
+                                {% if cell.description %}
+                                    <span class="dark:text-gray-400 text-gray-900">{{ cell.description }}</span>
+                                {% else %}
+                                    <span class="dark:text-gray-500 text-gray-400">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4">
+                                <span class="dark:text-gray-200 text-gray-900">{{ cell.zone.name }}</span>
+                            </td>
+
+                            <!-- Zone Leader column -->
+                            <td class="py-4">
+                                {% if cell.zone.leader %}
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full overflow-hidden">
+                                            {% if cell.zone.leader.profile_pic %}
+                                                <img src="{{ cell.zone.leader.profile_pic.url }}" alt="{{ cell.zone.leader.user.username }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                <div class="w-full h-full dark:bg-purple-900/30 bg-purple-100 flex items-center justify-center dark:text-purple-400 text-purple-600 mr-3">
+                                                    {{ cell.zone.leader.user.username|first|upper }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <span class="dark:text-gray-200 text-gray-900 ml-3">{{ cell.zone.leader.user.username }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="dark:text-gray-500 text-gray-400">No leader assigned</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Cell Leader column moved here -->
+                            <td class="py-4">
+                                {% if cell.leader %}
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full overflow-hidden">
+                                            {% if cell.leader.profile_pic %}
+                                                <img src="{{ cell.leader.profile_pic.url }}" alt="{{ cell.leader.user.username }}" class="w-full h-full object-cover">
+                                            {% else %}
+                                                <div class="w-full h-full dark:bg-blue-900/30 bg-blue-100 flex items-center justify-center dark:text-blue-400 text-blue-600 mr-3">
+                                                    {{ cell.leader.user.username|first|upper }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <span class="dark:text-gray-200 text-gray-900 ml-3">{{ cell.leader.user.username }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="dark:text-gray-500 text-gray-400">No leader assigned</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Actions column -->
+                            <td class="py-4">
+                                <div class="flex space-x-2">
+                                    <button onclick="openEditCellModal('{{ cell.id }}', '{{ cell.name }}', '{{ cell.description }}', '{{ cell.zone.id }}', '{{ cell.leader.user.id }}')" 
+                                            class="dark:text-blue-400 text-blue-600 dark:hover:text-blue-300 hover:text-blue-700">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="confirmCellDelete('{{ cell.id }}', '{{ cell.name }}')"
+                                            class="dark:text-red-400 text-red-600 dark:hover:text-red-300 hover:text-red-700">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Cell Modal -->
+<div id="addCellModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="dark:bg-gray-800 bg-white rounded-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold dark:text-white text-gray-900 mb-4">Add New Cell</h2>
+        <!-- Update form actions -->
+        <form action="{% url 'create_cell' %}" method="POST">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block dark:text-gray-400 text-gray-700 mb-2">Cell Name</label>
+                <input type="text" name="name" required
+                       class="w-full dark:bg-gray-700 bg-gray-50 dark:text-white text-gray-900 dark:border-gray-600 border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500">
+            </div>
+            <div class="mb-4">
+                <label class="block dark:text-gray-400 text-gray-700 mb-2">Description</label>
+                <textarea name="description" rows="3"
+                          class="w-full dark:bg-gray-700 bg-gray-50 dark:text-white text-gray-900 dark:border-gray-600 border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block dark:text-gray-400 text-gray-700 mb-2">Zone</label>
+                <select name="zone" id="addCellZone" required 
+                        class="w-full dark:bg-gray-700 bg-gray-50 dark:text-white text-gray-900 dark:border-gray-600 border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500">
+                    <option value="">Select Zone</option>
+                    {% for zone in zones %}
+                        <option value="{{ zone.id }}">{{ zone.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="text-xs text-gray-500 mt-1">
+                    Available zones: {{ zones|length }}
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block dark:text-gray-400 text-gray-700 mb-2">Cell Leader</label>
+                <select name="cell_leader"
+                        class="w-full dark:bg-gray-700 bg-gray-50 dark:text-white text-gray-900 dark:border-gray-600 border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500">
+                    <option value="">Select Cell Leader</option>
+                    {% for leader in available_leaders %}
+                    <option value="{{ leader.id }}">{{ leader.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="closeAddCellModal()"
+                        class="px-4 py-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded">
+                    Add Cell
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Cell Modal -->
+<div id="editCellModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="dark:bg-gray-800 bg-white rounded-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold dark:text-white text-gray-900 mb-4">Edit Cell</h2>
+        <form id="editCellForm" method="POST">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="block dark:text-gray-400 text-gray-700 mb-2">Cell Name</label>
+                <input type="text" id="editCellName" name="name" required
+                       class="w-full dark:bg-gray-700 bg-gray-50 dark:text-white text-gray-900 dark:border-gray-600 border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500">
+            </div>
+            <div class="mb-4">
+                <label class="block dark:text-gray-400 text-gray-700 mb-2">Description</label>
+                <textarea id="editCellDescription" name="description" rows="3"
+                          class="w-full dark:bg-gray-700 bg-gray-50 dark:text-white text-gray-900 dark:border-gray-600 border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block dark:text-gray-400 text-gray-700 mb-2">Zone</label>
+                <select id="editCellZone" name="zone" required
+                        class="w-full dark:bg-gray-700 bg-gray-50 dark:text-white text-gray-900 dark:border-gray-600 border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500">
+                    <option value="">Select Zone</option>
+                    {% for zone in zones %}
+                    <option value="{{ zone.id }}">{{ zone.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block dark:text-gray-400 text-gray-700 mb-2">Cell Leader</label>
+                <select id="editCellLeader" name="cell_leader"
+                        class="w-full dark:bg-gray-700 bg-gray-50 dark:text-white text-gray-900 dark:border-gray-600 border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-indigo-500">
+                    <option value="">No Leader</option>
+                    {% for leader in available_leaders %}
+                    <option value="{{ leader.id }}">{{ leader.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="closeEditCellModal()"
+                        class="px-4 py-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="dark:bg-gray-800 bg-white rounded-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold dark:text-white text-gray-900 mb-4">Delete Cell</h2>
+        <p class="dark:text-gray-300 text-gray-600 mb-4">Are you sure you want to delete cell "<span id="deleteCellName" class="dark:text-white text-gray-900"></span>"?</p>
+        <div class="flex justify-end space-x-2">
+            <button onclick="closeDeleteModal()"
+                    class="px-4 py-2 dark:text-gray-400 text-gray-600 dark:hover:text-white hover:text-gray-900">
+                Cancel
+            </button>
+            <button onclick="executeDelete()"
+                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug check for zones
+    const zoneSelect = document.getElementById('addCellZone');
+    console.log('Initial zones:', Array.from(zoneSelect.options).map(opt => ({
+        value: opt.value,
+        text: opt.text
+    })));
+});
+
+    function handleZoneChange() {
+        const zoneSelect = document.getElementById('addCellZone');
+        const selectedZone = zoneSelect.options[zoneSelect.selectedIndex];
+        console.log('Selected zone:', selectedZone.value, selectedZone.dataset.name); // Debug log
+    }
+
+    async function loadZones(selectElement) {
+        try {
+            const response = await fetch('/get-zones/');
+            const zones = await response.json();
+            selectElement.innerHTML = '<option value="">Select Zone</option>';
+            zones.forEach(zone => {
+                const option = document.createElement('option');
+                option.value = zone.id;
+                option.textContent = zone.name;
+                selectElement.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading zones:', error);
+        }
+    }
+
+    function handleSearch() {
+        const searchQuery = document.getElementById('searchInput').value.trim();
+        window.location.href = searchQuery 
+            ? `/cells/?search=${encodeURIComponent(searchQuery)}`
+            : `/cells/`;
+    }
+
+    function openAddCellModal() {
+        const modal = document.getElementById('addCellModal');
+        modal.classList.remove('hidden');
+        
+        // Debug log zones when opening modal
+        const zoneSelect = document.getElementById('addCellZone');
+        console.log('Available zones when opening modal:', 
+            Array.from(zoneSelect.options).map(opt => ({
+                value: opt.value,
+                text: opt.text
+            }))
+        );
+    }
+    
+    function closeAddCellModal() {
+        document.getElementById('addCellModal').classList.add('hidden');
+    }
+
+    function openEditCellModal(cellId, cellName, cellDescription, zoneId, cellLeaderId) {
+        document.getElementById('editCellForm').action = `/cells/edit/${cellId}/`;
+        document.getElementById('editCellName').value = cellName;
+        document.getElementById('editCellDescription').value = cellDescription || '';
+
+        loadZones(document.getElementById('editCellZone')).then(() => {
+            document.getElementById('editCellZone').value = zoneId || '';
+        });
+        
+        document.getElementById('editCellLeader').value = cellLeaderId || '';
+        document.getElementById('editCellModal').classList.remove('hidden');
+    }
+
+    function closeEditCellModal() {
+        document.getElementById('editCellModal').classList.add('hidden');
+    }
+
+    let deleteCellId = null;
+
+    function confirmCellDelete(cellId, cellName) {
+        deleteCellId = cellId;
+        document.getElementById('deleteCellName').textContent = cellName;
+        document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteConfirmModal').classList.add('hidden');
+        deleteCellId = null;
+    }
+
+    function executeDelete() {
+        if (!deleteCellId) return;
+
+        fetch(`/cells/delete/${deleteCellId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            credentials: 'same-origin'
+        }).then(response => response.json())
+          .then(data => {
+              if (data.status === 'success') {
+                  window.location.reload();
+              } else {
+                  alert(`Error: ${data.message}`);
+              }
+          })
+          .catch(error => {
+              alert(`Error: ${error.message}`);
+          });
+    }
+</script>
+{% endblock %}
