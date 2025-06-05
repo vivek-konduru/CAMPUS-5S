@@ -35,6 +35,7 @@ ALLOWED_HOSTS = [
     '192.168.18.33',
     '192.168.18.33:8000',
     '192.168.0.114',  # Added IP without port
+    'campus-5s.onrender.com',
     '192.168.0.114:8000'
 ]
 
